@@ -1,5 +1,6 @@
 {
   "port": 5243,
+  "host": "tg-service",
   "channels": [
     {
       "name": "test",

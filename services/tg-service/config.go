@@ -9,6 +9,7 @@ var appConfig Config
 
 type Config struct {
 	Port     int
+	Host     string
 	Channels []Channel
 }
 

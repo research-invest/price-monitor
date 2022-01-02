@@ -2,11 +2,9 @@ FROM golang:alpine
 
 WORKDIR /opt/app
 
-COPY ./backend/ticket-system /opt/app/ticket-system
-COPY ./backend/.env /opt/app/.env
-COPY ./tls /opt/app/tls
-COPY ./frontend-clients-static /opt/app/frontend-clients-static
+COPY ./services/tg-service/tg-service /opt/app/tg-service
+COPY ./services/tg-service/config.json /opt/app/config.json
 
-EXPOSE 3001
+EXPOSE 5243
 
-CMD ["/opt/app/ticket-system", "-mode", "client", "-dev"]
+CMD ["/opt/app/tg-service"]

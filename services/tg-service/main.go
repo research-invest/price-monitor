@@ -9,8 +9,8 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
-	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -24,15 +24,22 @@ type SendMessageChannel struct {
 
 var ChannelBots = make(map[string]*tgbotapi.BotAPI, 5) // 5!!!!!
 
-func main() {
-	readConfig()
+var log = logrus.New()
 
+func main() {
+	setLogParam()
+	readConfig()
+	runListenChannels()
+	startApiListenAndServe()
+}
+
+func runListenChannels() {
 	for _, channel := range appConfig.Channels {
 		channel := channel
 
 		bot, err := tgbotapi.NewBotAPI(channel.Token)
 		if err != nil {
-			logrus.Panic(err)
+			log.Panic(err)
 		}
 
 		log.Printf("Authorized on account %s", bot.Self.UserName)
@@ -46,15 +53,29 @@ func main() {
 			startListenerChannel(channel)
 		}()
 	}
+}
+
+func startApiListenAndServe() {
 
 	port := appConfig.Port
-	host := "localhost"
+	host := appConfig.Host
 
 	fmt.Println("Start service on " + host + ":" + strconv.Itoa(port) + ".")
 
 	err := http.ListenAndServe(host+":"+strconv.Itoa(port), nil)
 	if err != nil {
-		logrus.Fatalf("can't run service : %v", err)
+		log.Fatalf("can't run service : %v", err)
+	}
+}
+
+func setLogParam() {
+	log.Out = os.Stdout
+
+	file, err := os.OpenFile("./logs/logrus.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err == nil {
+		log.Out = file
+	} else {
+		log.Info("Failed to log to file, using default stderr")
 	}
 }
 
@@ -86,7 +107,7 @@ func WriteHeader(w http.ResponseWriter, response interface{}) {
 func responseWrite(w http.ResponseWriter, data []byte) {
 	_, err := w.Write(data)
 	if err != nil {
-		logrus.Warnf("can't write response : %v", err)
+		log.Warnf("can't write response : %v", err)
 	}
 }
 
@@ -116,10 +137,11 @@ func startListenerChannel(channel Channel) {
 
 		resp, err := http.Post(channel.UrlApi, "application/json", responseBody)
 		if err != nil {
-			logrus.Error("An Error Occurred %v", err)
+			log.Error("An Error Occurred %v", err)
 
 			err, _ = sendMessageInChannel(channel.UrlCode, update.Message.Chat.ID, "Error #21353")
 			if err != nil {
+				log.Error("An Error sendMessageInChannel %v", err)
 				continue
 			}
 
@@ -132,15 +154,15 @@ func startListenerChannel(channel Channel) {
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			textMessage = err.Error()
-			logrus.Error(err)
+			log.Error("An Error read from api response %v", err)
 			continue
 		} else {
 			textMessage = string(body)
-			log.Printf(textMessage)
 		}
 
 		err, _ = sendMessageInChannel(channel.UrlCode, update.Message.Chat.ID, textMessage)
 		if err != nil {
+			log.Error("An Error read from api response send %v", err)
 			continue
 		}
 	}
@@ -148,21 +170,7 @@ func startListenerChannel(channel Channel) {
 
 func ChannelHandler(w http.ResponseWriter, r *http.Request) {
 	code := strings.Replace(r.URL.Path, ChannelUrl, "", 1)
-
-	//bot := ChannelBots[code]
-	//defer func() {
-	//	bot = nil
-	//}()
-
-	//if err != nil {
-	//	logrus.Fatalf(err.Error())
-	//}
-
 	switch r.Method {
-	//case "GET":
-	// Just send out the JSON version of 'tom'
-	//j, _ := json.Marshal(tom)
-	//w.Write(j)
 	case "POST":
 		d := json.NewDecoder(r.Body)
 		sendMessage := &SendMessageChannel{}
@@ -170,27 +178,22 @@ func ChannelHandler(w http.ResponseWriter, r *http.Request) {
 		err := d.Decode(sendMessage)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Error("ChannelHandler error Decode %v", err)
 			return
 		}
 
 		err, _ = sendMessageInChannel(code, sendMessage.ChatId, sendMessage.Text)
 		if err != nil {
+			log.Error("ChannelHandler error send message %v", err)
 			return
 		}
 
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, "Success")
-
-		//msg := tgbotapi.NewMessage(sendMessage.ChatId, sendMessage.Text)
-		//send, err := bot.Send(msg)
-		//if err != nil {
-		//	return
-		//}
+		fmt.Fprintf(w, "success")
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		fmt.Fprintf(w, "I can't do that.")
 	}
-	//_, _ = w.Write([]byte("success\n"))
 }
 
 func sendMessageInChannel(code string, chatId int64, message string) (error, bool) {
@@ -198,7 +201,7 @@ func sendMessageInChannel(code string, chatId int64, message string) (error, boo
 	msg := tgbotapi.NewMessage(chatId, message)
 
 	if _, err := bot.Send(msg); err != nil {
-		logrus.Fatalf(err.Error())
+		log.Error("sendMessageInChannel error send message %v", err)
 		return err, false
 	}
 

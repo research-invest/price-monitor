@@ -35,6 +35,17 @@ services:
     ports:
       - "5432:5432"
 
+  tg-service:
+    build:
+      context: ../
+      dockerfile: ./services/tg-service/docker/Dockerfile
+    container_name: tg-service
+    restart: always
+    volumes:
+      - ./logs/tg-service:/opt/app/logs
+    ports:
+      - "5243:5243"
+
   redis:
     image: redis
     restart: always
