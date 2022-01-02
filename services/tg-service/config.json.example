@@ -1,0 +1,17 @@
+{
+  "port": 5243,
+  "channels": [
+    {
+      "name": "test",
+      "url-code": "test",
+      "url-api": "http://localhost:8081/api/v1/tg-service",
+      "token": "5032___112:AAH5b4biJwh1JjQJG____1J2Ork8G5exc9Q"
+    },
+    {
+      "name": "price checker",
+      "url-code": "price-checker",
+      "url-api": "http://localhost:8081/api/v1/tg-service",
+      "token": "5032___112:AAH5b4biJwh1JjQJG____1J2Ork8G5exc9Q"
+    }
+  ]
+}

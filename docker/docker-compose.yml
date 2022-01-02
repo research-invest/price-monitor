@@ -1,0 +1,52 @@
+version: '3'
+services:
+  api-nginx:
+    image: nginx:latest
+    restart: always
+    container_name: api-nginx
+    volumes:
+      - ./images/nginx:/etc/nginx/conf.d
+      - ../api:/var/www/app
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - api-php
+      - postgres
+    ports:
+      - "83:80"
+
+  api-php:
+    build: ./images/php
+    restart: always
+    container_name: api-php
+    environment:
+      APP_DEBUG: 1
+    volumes:
+      - ../api:/var/www/app
+      - ./images/php/custom_php.ini:/usr/local/etc/php/conf.d/custom_php.ini
+
+  postgres:
+    image: postgres:12.2-alpine
+    restart: always
+    container_name: postgres
+    environment:
+      POSTGRES_USER: dbuser
+      POSTGRES_PASSWORD: HCK6LrwUsVu64ZdF
+      POSTGRES_DB: price_monitoring
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis
+    restart: always
+    container_name: redis
+    volumes:
+      - ./data/redis/data:/data
+    ports:
+      - "6379:6379"
+
+  adminer:
+    container_name: adminer
+    image: adminer
+    restart: always
+    ports:
+      - "82:8080"
