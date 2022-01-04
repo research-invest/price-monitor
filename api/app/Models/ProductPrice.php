@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ProductPrices extends Model
+class ProductPrice extends Model
 {
     use HasFactory;
 
@@ -14,7 +14,7 @@ class ProductPrices extends Model
     protected $fillable = [
         'product_id',
         'price',
-        'percent',
+        'delta',
         'created_at',
     ];
 

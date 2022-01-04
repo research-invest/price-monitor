@@ -12,11 +12,16 @@ class Markets
     protected ?Market $marketClass;
     private array $errors = [];
 
-    public function __construct(array $data)
+    public function __construct(){}
+
+    public function setRequestData(array $data)
     {
         $this->requestData = $data;
+    }
 
-        $this->marketClass = $this->getClassMarket();
+    public function getMarketClass()
+    {
+        $this->marketClass = $this->marketClass ?:$this->getClassMarket();
 
         if ($this->marketClass && ($errors = $this->marketClass->getErrors())) {
             $this->addErrors($errors);
@@ -25,10 +30,12 @@ class Markets
 
     public function getProduct(): ?Product
     {
-        return $this->marketClass->getProduct();
+        $this->getMarketClass();
+
+        return $this->marketClass?->getProduct();
     }
 
-    protected function getClassMarket()
+    protected function getClassMarket(): ?Market
     {
         $url = $this->requestData['text_message'];
         $command = $this->requestData['command'];
@@ -37,9 +44,14 @@ class Markets
 
         if ($command && !$isUrl) {
             //command
-            return;
+            return null;
         }
 
+        return $this->getClassMarketByUrl($url);
+    }
+
+    public function getClassMarketByUrl(string $url): ?Market
+    {
         $parseUrl = parse_url($url);
 
         if (substr_count($parseUrl['host'], WbRu::HOST)) {
@@ -49,6 +61,8 @@ class Markets
         } else {
             $this->addError('Ссылка не поддерживается');
         }
+
+        return null;
     }
 
     protected function addError(string $error)

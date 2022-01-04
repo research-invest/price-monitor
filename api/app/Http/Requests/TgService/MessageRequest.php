@@ -18,7 +18,7 @@ class MessageRequest extends ApiRequest
             'command' => 'string|nullable',
             'first_name' => 'string|nullable',
             'last_name' => 'string|nullable',
-            'username' => 'string',
+            'username' => 'min:4|nullable',
             'text_message' => 'required|string',
 //            'text_message' => ['required', 'string'], //, 'check_market_url'
         ];

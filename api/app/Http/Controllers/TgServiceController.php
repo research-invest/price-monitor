@@ -31,11 +31,14 @@ class TgServiceController extends Controller
             ]
         );
 
-        $markets = new Markets($data);
+        $markets = new Markets();
+        $markets->setRequestData($data);
 
-        if ($errors = $markets->getErrors()) {
-            return join(', ', $errors);
-        }
+//        $markets->getMarketClass();
+//
+//        if ($errors = $markets->getErrors()) {
+//            return join(', ', $errors);
+//        }
 
         $product = $markets->getProduct();
 

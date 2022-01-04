@@ -48,7 +48,7 @@ class CreateTables extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('product_id');
             $table->unsignedDecimal('price', 12);
-            $table->integer('percent');
+            $table->decimal('delta')->default(0);
 
             $table->timestamps();
 
