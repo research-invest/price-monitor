@@ -19,7 +19,8 @@ class Product extends Model
         'title',
         'description',
         'status',
-        'marker_id',
+        'market_id',
+        'external_id',
         'created_at',
     ];
 

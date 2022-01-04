@@ -19,7 +19,8 @@ class MessageRequest extends ApiRequest
             'first_name' => 'string|nullable',
             'last_name' => 'string|nullable',
             'username' => 'string',
-            'text_message' => ['required', 'string', 'check_market_url'],
+            'text_message' => 'required|string',
+//            'text_message' => ['required', 'string'], //, 'check_market_url'
         ];
     }
 

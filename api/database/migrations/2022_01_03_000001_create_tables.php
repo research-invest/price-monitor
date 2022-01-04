@@ -27,17 +27,21 @@ class CreateTables extends Migration
             $table->string('title')->nullable();
             $table->text('description')->nullable();
             $table->smallInteger('status')->default(1);
-            $table->bigInteger('marker_id')->nullable();
+            $table->bigInteger('market_id')->nullable();
+            $table->bigInteger('external_id');
 
             $table->timestamps();
 
-            $table->foreign('marker_id')
+            $table->foreign('market_id')
                 ->references('id')
                 ->on('markets')
                 ->onDelete('cascade');
 
-            $table->index('marker_id');
+            $table->index('market_id');
+            $table->index('external_id');
             $table->index('url');
+
+            $table->unique(['market_id', 'external_id'], 'U_market_id_external_id');
         });
 
         Schema::create('product_prices', function (Blueprint $table) {
@@ -88,7 +92,7 @@ class CreateTables extends Migration
                 ->onDelete('cascade');
         });
 
-        Schema::create('messages_log', function (Blueprint $table) {
+        Schema::create('message_logs', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->bigInteger('subscriber_id');
             $table->string('message');
@@ -108,7 +112,7 @@ class CreateTables extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('messages_log');
+        Schema::dropIfExists('message_logs');
         Schema::dropIfExists('product_subscribers');
         Schema::dropIfExists('subscribers');
         Schema::dropIfExists('product_prices');

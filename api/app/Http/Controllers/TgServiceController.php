@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\TgService\MessageRequest;
+use App\Markets\Markets;
 use App\Models\MessageLog;
-use App\Models\Product;
 use App\Models\ProductSubscriber;
 use App\Models\Subscriber;
 use Illuminate\Http\Request;
@@ -13,7 +13,6 @@ class TgServiceController extends Controller
 {
     public function message(MessageRequest $request)
     {
-//        $data = $request->all();
         $data = $request->validated();
 
         $subscriber = Subscriber::firstOrCreate(
@@ -32,24 +31,31 @@ class TgServiceController extends Controller
             ]
         );
 
-        $data = $request->validated();
+        $markets = new Markets($data);
 
-        $product = new Product();
-        $product->url = $data['text_message'];
-        $product->save();
+        if ($errors = $markets->getErrors()) {
+            return join(', ', $errors);
+        }
+
+        $product = $markets->getProduct();
+
+        if (!$product && ($errors = $markets->getErrors())) {
+            return join(', ', $errors);
+        }
 
 //        $subscriber->products()->attach($product);
 
-        $productSubscriber = ProductSubscriber::firstOrCreate(
-            ['subscriber_id' => $subscriber->id],
-            ['product_id' => $product->id],
+        ProductSubscriber::firstOrCreate(
+            [
+                'subscriber_id' => $subscriber->id,
+                'product_id' => $product->id
+            ],
             [
                 'subscriber_id' => $subscriber->id,
                 'product_id' => $product->id,
             ]
         );
 
-
-        return 'zbs';//CompanyResource::make($product)
+        return 'Ваша ссылка успешно добавлена в систему.';
     }
 }
