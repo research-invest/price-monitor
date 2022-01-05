@@ -3,12 +3,14 @@
 namespace App\Console\Commands;
 
 use App\Helpers\MathHelper;
+use App\Libs\HttpClient\HttpClient;
 use App\Markets\Market;
 use App\Markets\Markets;
 use App\Models\Market as MarketModel;
 use App\Models\Product;
 use App\Models\ProductPrice;
 use JetBrains\PhpStorm\ArrayShape;
+use Illuminate\Console\Command;
 
 /**
  * php artisan get-prices:run
@@ -67,7 +69,7 @@ class GetPrices extends Command
 
             $data = $this->getProductPageData($product->url, $class);
 
-            if ($data === false) {
+            if (empty($data['price'])) {
                 $product->status = Product::STATUS_DELETED;
                 $product->save();
 
@@ -91,24 +93,38 @@ class GetPrices extends Command
                 ->orderBy('id', 'DESC')
                 ->first();
 
-            $price = $data['price'] ?? 0;
+            $price = $data['price'];
+
+            if ($price === $lastPrice->price) {
+                continue;
+            }
 
             $prices->setRawAttributes(
                 [
                     'product_id' => $product->id,
                     'price' => $price,
-                    'delta' =>
-                        MathHelper::getPercentageChange($lastPrice ? $lastPrice->price : 0, $price),
+                    'delta' => MathHelper::getPercentageChange($lastPrice ? $lastPrice->price : 0, $price),
                 ]);
 
             $prices->save();
+
+            if ($price < $lastPrice->price) {
+                $notifyData = [
+                    'new_price' => $price,
+                    'old_price' => $lastPrice->price,
+                    'product_id' => $product->id,
+                    'product_url' => $product->url,
+                ];
+
+                $prices->notify(new \App\Notifications\PriceNotification($notifyData));
+            }
         }
     }
 
     #[ArrayShape(['price' => "int|mixed", 'title' => "mixed|string", 'description' => "mixed|string"])]
     protected function getProductPageData($productUrl, &$class): array
     {
-        $content = $this->getRequest($productUrl);
+        $content = HttpClient::getRequest($productUrl);
 
         $data = $class->getInfoProduct($content);
 

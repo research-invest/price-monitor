@@ -4,20 +4,23 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Notifications\Notifiable;
 
-class ProductPrice extends Model
+class Notification extends Model
 {
-    use HasFactory, Notifiable;
+    use HasFactory;
 
     protected $guarded = ['id'];
 
     protected $fillable = [
+        'subscriber_id',
         'product_id',
         'price',
-        'delta',
-        'created_at',
     ];
+
+    public function subscriber()
+    {
+        return $this->belongsTo(Subscriber::class);
+    }
 
     public function product()
     {

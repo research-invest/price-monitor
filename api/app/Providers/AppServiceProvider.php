@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Channels\TgChannel;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,6 +25,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        Notification::extend('tg', function ($app) {
+            return new TgChannel();
+        });
     }
 }

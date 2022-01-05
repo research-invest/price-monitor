@@ -14,13 +14,13 @@ class MathHelper
 
         if ($oldNumber > $newNumber) {
             if ($newNumber > 0) {
-                $result = ($decreaseValue / $newNumber) * 100;
+                $result = round(($decreaseValue / $newNumber) * 100, 2);
             } else {
                 $result = -100;
             }
         } else {
             if ($oldNumber > 0) {
-                $result = ($decreaseValue / $oldNumber) * 100;
+                $result = round(($decreaseValue / $oldNumber) * 100, 2);
             } else {
                 $result = 100;
             }
