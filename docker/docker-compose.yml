@@ -38,10 +38,10 @@ services:
       POSTGRES_PASSWORD: HCK6LrwUsVu64ZdF
       POSTGRES_DB: price_monitoring
     expose:
-      - "5434"
+      - "5435"
     ports:
-      - "5434:5434" # HOST:CONTAINER
-    command: -p 5434
+      - "5435:5435" # HOST:CONTAINER
+    command: -p 5435
     restart: always
     networks:
       - price_notifier
