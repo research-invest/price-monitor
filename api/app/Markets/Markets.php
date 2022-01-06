@@ -12,7 +12,9 @@ class Markets
     protected $marketClass;
     private array $errors = [];
 
-    public function __construct(){}
+    public function __construct()
+    {
+    }
 
     public function setRequestData(array $data)
     {
@@ -21,7 +23,7 @@ class Markets
 
     public function getMarketClass()
     {
-        $this->marketClass = $this->marketClass ?:$this->getClassMarket();
+        $this->marketClass = $this->marketClass ?: $this->getClassMarket();
 
         if ($this->marketClass && ($errors = $this->marketClass->getErrors())) {
             $this->addErrors($errors);
@@ -53,6 +55,11 @@ class Markets
     public function getClassMarketByUrl(string $url): ?Market
     {
         $parseUrl = parse_url($url);
+
+        if (empty($parseUrl['host'])) {
+            $this->addError('Не корректная ссылка');
+            return null;
+        }
 
         if (substr_count($parseUrl['host'], WbRu::HOST)) {
             return new WbRu($url);
