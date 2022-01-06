@@ -10,7 +10,7 @@ services:
       - ./logs/nginx:/var/log/nginx
     depends_on:
       - api-php
-      - postgres
+      - price-notifier-postgres
     ports:
       - "83:80"
     networks:
@@ -22,6 +22,8 @@ services:
     container_name: api-php
     environment:
       APP_DEBUG: 1
+    depends_on:
+      - price-notifier-postgres
     volumes:
       - ../api:/var/www/app
       - ./images/php/custom_php.ini:/usr/local/etc/php/conf.d/custom_php.ini
