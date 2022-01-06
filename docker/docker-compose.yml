@@ -13,6 +13,8 @@ services:
       - postgres
     ports:
       - "83:80"
+    networks:
+      - price_notifier
 
   api-php:
     build: ./images/php
@@ -23,17 +25,24 @@ services:
     volumes:
       - ../api:/var/www/app
       - ./images/php/custom_php.ini:/usr/local/etc/php/conf.d/custom_php.ini
+    networks:
+      - price_notifier
 
-  postgres:
+  price-notifier-postgres:
     image: postgres:12.2-alpine
-    restart: always
-    container_name: postgres
+    container_name: price-notifier-postgres
     environment:
       POSTGRES_USER: dbuser
       POSTGRES_PASSWORD: HCK6LrwUsVu64ZdF
       POSTGRES_DB: price_monitoring
+    expose:
+      - "5434"
     ports:
-      - "5434:5434"
+      - "5434:5434" # HOST:CONTAINER
+    command: -p 5434
+    restart: always
+    networks:
+      - price_notifier
 
   tg-service:
     build:
@@ -45,3 +54,8 @@ services:
       - ./logs/tg-service:/opt/app/logs
     ports:
       - "5243:5243"
+    networks:
+      - price_notifier
+
+networks:
+  price_notifier:
