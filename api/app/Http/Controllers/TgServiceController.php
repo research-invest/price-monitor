@@ -34,30 +34,25 @@ class TgServiceController extends Controller
         $markets = new Markets();
         $markets->setRequestData($data);
 
-//        $markets->getMarketClass();
-//
-//        if ($errors = $markets->getErrors()) {
-//            return join(', ', $errors);
-//        }
-
         $product = $markets->getProduct();
 
-        if (!$product && ($errors = $markets->getErrors())) {
-            return join(', ', $errors);
-        }
+        if ($product) {
 
 //        $subscriber->products()->attach($product);
 
-        ProductSubscriber::firstOrCreate(
-            [
-                'subscriber_id' => $subscriber->id,
-                'product_id' => $product->id
-            ],
-            [
-                'subscriber_id' => $subscriber->id,
-                'product_id' => $product->id,
-            ]
-        );
+            ProductSubscriber::firstOrCreate(
+                [
+                    'subscriber_id' => $subscriber->id,
+                    'product_id' => $product->id
+                ],
+                [
+                    'subscriber_id' => $subscriber->id,
+                    'product_id' => $product->id,
+                ]
+            );
+        } elseif ($errors = $markets->getErrors()) {
+            return join(', ', $errors);
+        }
 
         return 'Ваша ссылка успешно добавлена в систему.';
     }

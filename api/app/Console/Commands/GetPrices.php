@@ -31,6 +31,8 @@ class GetPrices extends Command
      */
     protected $description = 'Command description';
 
+    private HttpClient $httpClient;
+
     /**
      * Create a new command instance.
      *
@@ -55,6 +57,9 @@ class GetPrices extends Command
             ->where('m.status', '=', MarketModel::STATUS_ACTIVE)
             ->orderBy('m.id', 'DESC')
             ->get();
+
+
+        $this->httpClient = new HttpClient();
 
         /**
          * @var Market $products
@@ -93,24 +98,22 @@ class GetPrices extends Command
                 ->orderBy('id', 'DESC')
                 ->first();
 
-            $price = $data['price'];
-
-            if ($price === $lastPrice->price) {
+            if ($data['price'] === $lastPrice->price) {
                 continue;
             }
 
             $prices->setRawAttributes(
                 [
                     'product_id' => $product->id,
-                    'price' => $price,
-                    'delta' => MathHelper::getPercentageChange($lastPrice ? $lastPrice->price : 0, $price),
+                    'price' => $data['price'],
+                    'delta' => MathHelper::getPercentageChange($lastPrice ? $lastPrice->price : 0, $data['price']),
                 ]);
 
             $prices->save();
 
-            if ($price < $lastPrice->price) {
+            if ($data['price'] < $lastPrice->price) {
                 $notifyData = [
-                    'new_price' => $price,
+                    'new_price' => $data['price'],
                     'old_price' => $lastPrice->price,
                     'product_id' => $product->id,
                     'product_url' => $product->url,
@@ -124,7 +127,7 @@ class GetPrices extends Command
     #[ArrayShape(['price' => "int|mixed", 'title' => "mixed|string", 'description' => "mixed|string"])]
     protected function getProductPageData($productUrl, &$class): array
     {
-        $content = HttpClient::getRequest($productUrl);
+        $content = $this->httpClient->getContents($productUrl);
 
         $data = $class->getInfoProduct($content);
 

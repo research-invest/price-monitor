@@ -9,7 +9,7 @@ use App\Models\Product;
 class Markets
 {
     protected array $requestData = [];
-    protected ?Market $marketClass;
+    protected $marketClass;
     private array $errors = [];
 
     public function __construct(){}
@@ -59,7 +59,7 @@ class Markets
         } else if (substr_count($parseUrl['host'], OzonRu::HOST)) {
             return new OzonRu($url);
         } else {
-            $this->addError('Ссылка не поддерживается');
+            $this->addError('Принимаем ссылки на товары только с wildberries.ru и ozon.ru.');
         }
 
         return null;

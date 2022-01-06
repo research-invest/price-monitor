@@ -15,6 +15,7 @@ class Notification extends Model
         'subscriber_id',
         'product_id',
         'price',
+        'notification',
     ];
 
     public function subscriber()

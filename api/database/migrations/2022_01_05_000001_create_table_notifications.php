@@ -17,11 +17,10 @@ class CreateTableNotifications extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('subscriber_id');
             $table->bigInteger('product_id');
+            $table->string('notification', 500)->nullable(false);
             $table->unsignedDecimal('price', 12);
 
             $table->timestamps();
-
-            $table->unique(['subscriber_id', 'product_id'], 'U_notifications_subscriber_id_product_id');
 
             $table->foreign('subscriber_id')
                 ->references('id')

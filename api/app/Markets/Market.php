@@ -17,6 +17,7 @@ abstract class Market
     }
 
     abstract public function getProduct();
+    abstract public function getInfoProduct($contentPage): array;
 
     protected function addError($error)
     {

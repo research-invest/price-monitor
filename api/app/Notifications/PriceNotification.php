@@ -23,6 +23,11 @@ class PriceNotification extends Notification
         $this->notifyData = $notifyData;
     }
 
+    public function getNotifyData(): array
+    {
+        return $this->notifyData;
+    }
+
     /**
      * Get the notification's delivery channels.
      *
@@ -37,7 +42,11 @@ class PriceNotification extends Notification
     public function getSubscribers(): array
     {
         return ProductSubscriber::query()
-            ->select(['s.telegram_id', 's.first_name'])
+            ->select([
+                's.id AS subscriber_id',
+                's.telegram_id',
+                's.first_name'
+            ])
             ->join('subscribers AS s', 'product_subscribers.subscriber_id', '=', 's.id')
             ->where('product_subscribers.product_id', '=', $this->notifyData['product_id'])
             ->where('s.status', '=', Subscriber::STATUS_ACTIVE)
