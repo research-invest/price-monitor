@@ -33,7 +33,7 @@ services:
       POSTGRES_PASSWORD: HCK6LrwUsVu64ZdF
       POSTGRES_DB: price_monitoring
     ports:
-      - "5432:5432"
+      - "5434:5434"
 
   tg-service:
     build:
@@ -45,12 +45,3 @@ services:
       - ./logs/tg-service:/opt/app/logs
     ports:
       - "5243:5243"
-
-  redis:
-    image: redis
-    restart: always
-    container_name: redis
-    volumes:
-      - ./data/redis/data:/data
-    ports:
-      - "6379:6379"
