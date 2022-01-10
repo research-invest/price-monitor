@@ -98,7 +98,7 @@ class GetPrices extends Command
                 ->orderBy('id', 'DESC')
                 ->first();
 
-            if ($data['price'] === $lastPrice->price) {
+            if ($lastPrice && ($data['price'] === $lastPrice->price)) {
                 continue;
             }
 
@@ -111,7 +111,7 @@ class GetPrices extends Command
 
             $prices->save();
 
-            if ($data['price'] < $lastPrice->price) {
+            if ($lastPrice && $data['price'] < $lastPrice->price) {
                 $notifyData = [
                     'new_price' => $data['price'],
                     'old_price' => $lastPrice->price,
