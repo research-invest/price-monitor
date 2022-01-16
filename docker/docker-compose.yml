@@ -59,5 +59,14 @@ services:
     networks:
       - price_notifier
 
+  price-notifier-adminer:
+    container_name: price-notifier-adminer
+    image: adminer
+    ports:
+      - "8338:8080"
+    restart: always
+    networks:
+      - price-notifier
+
 networks:
   price_notifier:
