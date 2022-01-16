@@ -33,10 +33,11 @@ class TgServiceController extends Controller
 
         $markets = new Markets();
         $markets->setRequestData($data);
+        $markets->getMarketClass();
 
-        $product = $markets->getProduct();
-
-        if ($product) {
+        if ($commands = $markets->getIsCommands()) {
+            return join(', ', $commands);
+        } elseif ($product = $markets->getProduct()) {
 
 //        $subscriber->products()->attach($product);
 

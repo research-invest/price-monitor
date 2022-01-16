@@ -11,6 +11,12 @@ class Markets
     protected array $requestData = [];
     protected $marketClass;
     private array $errors = [];
+    private array $commands = [];
+    private array $commandsBot = [
+        'status' => 'Status',
+        'products' => 'Products list',
+        'report' => 'Report',
+    ];
 
     public function __construct()
     {
@@ -37,10 +43,20 @@ class Markets
         return $this->marketClass?->getProduct();
     }
 
-    protected function getClassMarket(): ?Market
+    protected function getClassMarket()
     {
         $url = $this->requestData['text_message'];
         $command = $this->requestData['command'];
+
+        if ($command) {
+            if (!array_key_exists($command, $this->commandsBot)) {
+                $this->addError('Такой команды не существует.');
+                return null;
+            }
+
+            $this->commands[] = $this->command($command);
+            return null;
+        }
 
         $isUrl = filter_var($url, FILTER_VALIDATE_URL) === true;
 
@@ -50,6 +66,24 @@ class Markets
         }
 
         return $this->getClassMarketByUrl($url);
+    }
+
+    protected function command(string $command): string
+    {
+        switch ($command) {
+            case 'status' :
+            default :
+                return "i'm ok";
+            case 'products' :
+            case 'report' :
+                return 'in progress';
+        }
+
+    }
+
+    public function getIsCommands(): array
+    {
+        return $this->commands;
     }
 
     public function getClassMarketByUrl(string $url): ?Market
