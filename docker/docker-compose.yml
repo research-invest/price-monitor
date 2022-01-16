@@ -66,7 +66,7 @@ services:
       - "8338:8080"
     restart: always
     networks:
-      - price-notifier
+      - price_notifier
 
 networks:
   price_notifier:
