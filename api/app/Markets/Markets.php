@@ -38,8 +38,6 @@ class Markets
 
     public function getProduct(): ?Product
     {
-        $this->getMarketClass();
-
         return $this->marketClass?->getProduct();
     }
 

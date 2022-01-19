@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Models\ProductPrice;
 use JetBrains\PhpStorm\ArrayShape;
 use Illuminate\Console\Command;
+use Symfony\Component\Console\Helper\Table;
 
 /**
  * php artisan get-prices:run
@@ -58,7 +59,6 @@ class GetPrices extends Command
             ->orderBy('m.id', 'DESC')
             ->get();
 
-
         $this->httpClient = new HttpClient();
 
         /**
@@ -73,6 +73,8 @@ class GetPrices extends Command
             $prices = new ProductPrice();
 
             $data = $this->getProductPageData($product->url, $class);
+
+            $this->info('Product['.$product->id.'] price:'. $data['price']);
 
             if (empty($data['price'])) {
                 $product->status = Product::STATUS_DELETED;
@@ -137,4 +139,28 @@ class GetPrices extends Command
             'description' => $data['description'] ?? '',
         ];
     }
+
+
+    private function tableTest()
+    {
+        // Create a new Table instance.
+        $table = new Table($this->output);
+
+        // Set the table headers.
+        $table->setHeaders([
+            'Site', 'Description'
+        ]);
+
+        // Set the contents of the table.
+        $table->setRows([
+            ['https://laravel.com',        'The official Laravel website'],
+            ['https://forge.laravel.com/', 'Painless PHP Servers'],
+            ['https://envoyer.io/',        'Zero Downtime PHP Deployment']
+        ]);
+
+        // Render the table to the output.
+        $table->render();
+
+    }
+
 }
