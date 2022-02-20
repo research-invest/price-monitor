@@ -17,6 +17,12 @@ class OzonRu extends Market
 
 //        /product/trimmer-dlya-borody-i-usov-philips-oneblade-qp2520-20-s-3-nasadkami-grebnyami-139163836/
 
+        if(!preg_match("/^\/product\//", $parseUrl['path']))
+        {
+            $this->addError('Не корректная ссылка на товар.');
+            return null;
+        }
+
         preg_match('/([0-9]+)\/$/', $parseUrl['path'], $externalId);
         $externalId = count($externalId) === 2 ? $externalId[1] : 0;
 

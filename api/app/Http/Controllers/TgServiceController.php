@@ -9,6 +9,7 @@ use App\Models\ProductSubscriber;
 use App\Models\Subscriber;
 use Illuminate\Http\Request;
 
+
 class TgServiceController extends Controller
 {
     public function message(MessageRequest $request)
@@ -31,26 +32,12 @@ class TgServiceController extends Controller
             ]
         );
 
-        $markets = new Markets();
-        $markets->setRequestData($data);
-        $markets->getMarketClass();
+        $markets = new Markets($data);
 
         if ($commands = $markets->getIsCommands()) {
             return join(', ', $commands);
         } elseif ($product = $markets->getProduct()) {
-
-//        $subscriber->products()->attach($product);
-
-            ProductSubscriber::firstOrCreate(
-                [
-                    'subscriber_id' => $subscriber->id,
-                    'product_id' => $product->id
-                ],
-                [
-                    'subscriber_id' => $subscriber->id,
-                    'product_id' => $product->id,
-                ]
-            );
+            ProductSubscriber::setProductSubscriber($subscriber->id, $product->id);
         } elseif ($errors = $markets->getErrors()) {
             return join(', ', $errors);
         }
