@@ -18,7 +18,7 @@ class Markets
         'report' => 'Report',
     ];
 
-    public function __construct($data)
+    public function __construct(array $data)
     {
         $this->setRequestData($data);
         $this->getMarketClass();
