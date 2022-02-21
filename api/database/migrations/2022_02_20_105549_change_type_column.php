@@ -18,7 +18,7 @@ class ChangeTypeColumn extends Migration
         });
 
         Schema::table('products', function (Blueprint $table) {
-            $table->text('url')->change();
+            $table->string('url', 3000)->change();
         });
     }
 
@@ -29,6 +29,14 @@ class ChangeTypeColumn extends Migration
      */
     public function down()
     {
-        //
+        Schema::table('message_logs', function($table)
+        {
+            $table->string('message')->change();
+        });
+
+        Schema::table('products', function($table)
+        {
+            $table->string('url')->change();
+        });
     }
 }
