@@ -25,4 +25,22 @@ class ProductSubscriber extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    /**
+     * @param int $subscriberId
+     * @param int $productId
+     */
+    public static function setProductSubscriber(int $subscriberId, int $productId)
+    {
+        self::firstOrCreate(
+            [
+                'subscriber_id' => $subscriberId,
+                'product_id' => $productId
+            ],
+            [
+                'subscriber_id' => $subscriberId,
+                'product_id' => $productId,
+            ]
+        );
+    }
 }
