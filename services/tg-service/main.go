@@ -199,6 +199,7 @@ func ChannelHandler(w http.ResponseWriter, r *http.Request) {
 func sendMessageInChannel(code string, chatId int64, message string) (error, bool) {
 	bot := ChannelBots[code]
 	msg := tgbotapi.NewMessage(chatId, message)
+	msg.ParseMode = "MarkdownV2"
 
 	if _, err := bot.Send(msg); err != nil {
 		log.Error("sendMessageInChannel error send message %v", err)
