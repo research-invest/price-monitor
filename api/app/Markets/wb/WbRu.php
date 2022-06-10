@@ -29,28 +29,33 @@ class WbRu extends Market
         return $this->firstOrCreateProduct($externalId);
     }
 
-    #[ArrayShape(['price' => "float", 'title' => "mixed|string", 'description' => "mixed|string"])]
     public function getInfoProduct($contentPage): array
     {
-        $begin = strpos($contentPage, '<div itemscope itemtype="http://schema.org/Product">');
-        $contentViewItemscope = substr($contentPage, $begin,
-            strpos($contentPage, '<div class="product-detail"') - $begin,
-        );
+        $result = json_decode($contentPage);
 
-        preg_match('/\<meta itemprop=\"name\" content=\"(.*)\"\>/m', $contentViewItemscope, $title);
-        $title = count($title) === 2 ? $title[1] : '';
+        $salePriceU = $result->data->products[0]->salePriceU ?? '';
+        $priceU = $result->data->products[0]->priceU ?? '';
+        $price = $salePriceU ? $salePriceU : $priceU;
+        $title = $result->data->products[0]->name ?? '';
 
-        preg_match('/\<meta itemprop=\"description\" content=\"(.*)" \/>/m', $contentViewItemscope, $description);
-        $description = count($description) === 2 ? $description[1] : '';
-
-        preg_match('/\<meta itemprop=\"price\" content=\"(.*)\"\>/m', $contentViewItemscope, $price);
-        $price = count($price) === 2 ? $price[1] : 0;
+        $before = substr($price,0,strlen($price)-2);
+        $after = substr($price,strlen($price)-2);
+        $priceFormat = !empty($before) ? $before . '.' . $after : '';
 
         return [
-            'price' => (float)($price),
+            'price' => $priceFormat,
             'title' => $title,
-            'description' => $description,
+            //'description' => $description,
         ];
     }
 
+    public function getExternalId(string $url): int
+    {
+        $parseUrl = parse_url($url);
+
+        preg_match('/\/catalog\/([0-9]+)\/detail\.aspx/', $parseUrl['path'], $externalId);
+        $externalId = count($externalId) === 2 ? (int)$externalId[1] : 0;
+
+        return $externalId;
+    }
 }

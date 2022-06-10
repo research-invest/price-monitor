@@ -9,11 +9,15 @@ use App\Models\ProductSubscriber;
 use App\Models\Subscriber;
 use Illuminate\Http\Request;
 
+use Illuminate\Support\Facades\Log;
+
 
 class TgServiceController extends Controller
 {
     public function message(MessageRequest $request)
     {
+        //Log::debug($request);
+
         $data = $request->validated();
 
         $subscriber = Subscriber::firstOrCreate(
@@ -35,7 +39,21 @@ class TgServiceController extends Controller
         $markets = new Markets($data);
 
         if ($commands = $markets->getIsCommands()) {
-            return join(', ', $commands);
+            $massage = '';
+
+            if ($commands = $markets->getIsCommands()) {
+                $commands = json_decode($commands[0]);
+
+                foreach ($commands as $val) {
+                    $title = $val->title ?? '';
+                    $price = $val->price ?? '';
+                    $url = $val->url ?? '';
+
+                    $massage .= "{$title}: {$price}\r\n{$url}\r\n\r\n";
+                }
+            }
+
+            return $massage;
         } elseif ($product = $markets->getProduct()) {
             ProductSubscriber::setProductSubscriber($subscriber->id, $product->id);
         } elseif ($errors = $markets->getErrors()) {
