@@ -38,9 +38,7 @@ class WbRu extends Market
         $price = $salePriceU ? $salePriceU : $priceU;
         $title = $result->data->products[0]->name ?? '';
 
-        $before = substr($price,0,strlen($price)-2);
-        $after = substr($price,strlen($price)-2);
-        $priceFormat = !empty($before) ? $before . '.' . $after : '';
+        $priceFormat = number_format(substr($price,0,-2), 2, '.', '');
 
         return [
             'price' => $priceFormat,
