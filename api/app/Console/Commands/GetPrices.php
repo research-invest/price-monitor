@@ -6,6 +6,7 @@ use App\Helpers\MathHelper;
 use App\Libs\HttpClient\HttpClient;
 use App\Markets\Market;
 use App\Markets\Markets;
+use App\Markets\wb\WbRu;
 use App\Models\Market as MarketModel;
 use App\Models\Product;
 use App\Models\ProductPrice;
@@ -60,19 +61,25 @@ class GetPrices extends Command
             ->get();
 
         $this->httpClient = new HttpClient();
-
         /**
          * @var Market $products
          */
         foreach ($products as $product) {
-
             $market = new Markets();
 
             $class = $market->getClassMarketByUrl($product->url);
 
             $prices = new ProductPrice();
 
-            $data = $this->getProductPageData($product->url, $class);
+            if ($class instanceof WbRu) {
+                $externalId = $class->getExternalId($product->url);
+
+                $uri = "https://card.wb.ru/cards/detail?spp=0&regions=68,64,83,4,38,80,33,70,82,86,75,30,69,22,66,31,48,1,40,71&stores=117673,122258,122259,125238,125239,125240,6159,507,3158,117501,120602,120762,6158,121709,124731,159402,2737,130744,117986,1733,686,132043&pricemarginCoeff=1.0&reg=0&appType=1&emp=0&locale=ru&lang=ru&curr=rub&couponsGeo=12,3,18,15,21&dest=-1029256,-102269,-1278703,-1255563&nm={$externalId}";
+
+                $data = $this->getProductPageData($uri, $class);
+            } else {
+                $data = $this->getProductPageData($product->url, $class);
+            }
 
             $this->info('Product['.$product->id.'] price:'. $data['price']);
 
@@ -162,5 +169,4 @@ class GetPrices extends Command
         $table->render();
 
     }
-
 }

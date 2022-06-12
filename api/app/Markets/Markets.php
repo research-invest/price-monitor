@@ -5,9 +5,12 @@ namespace App\Markets;
 use App\Markets\ozon\OzonRu;
 use App\Markets\wb\WbRu;
 use App\Models\Product;
+use App\Models\ProductPrice;
 
 class Markets
 {
+    const STATUS_ACTIVE = 1;
+
     protected array $requestData = [];
     protected $marketClass;
     private array $errors = [];
@@ -18,10 +21,12 @@ class Markets
         'report' => 'Report',
     ];
 
-    public function __construct(array $data)
+    public function __construct(array $data = [])
     {
-        $this->setRequestData($data);
-        $this->getMarketClass();
+        if (!empty($data)) {
+            $this->setRequestData($data);
+            $this->getMarketClass();
+        }
     }
 
     public function setRequestData(array $data)
@@ -75,10 +80,26 @@ class Markets
             default :
                 return "i'm ok";
             case 'products' :
+                $response = $this->getProductPricesByUser();
+                return json_encode($response);
             case 'report' :
                 return 'in progress';
         }
 
+    }
+
+    protected function getProductPricesByUser()
+    {
+        return ProductPrice::query()
+            ->select([
+                'product_prices.price',
+                'p.url',
+                'p.title'
+            ])
+            ->join('products AS p', 'product_prices.product_id', '=', 'p.id')
+            ->where('p.status', '=', self::STATUS_ACTIVE)
+            ->get()
+            ->toArray();
     }
 
     public function getIsCommands(): array
