@@ -80,10 +80,9 @@ class Markets
             default :
                 return "i'm ok";
             case 'products' :
-                $response = $this->getProductPricesByUser();
-                return json_encode($response);
             case 'report' :
-                return 'in progress';
+                $response = $this->getProductPricesByUser();
+                return $this->getMassageForCommand($command, $response);
         }
 
     }
@@ -93,13 +92,56 @@ class Markets
         return ProductPrice::query()
             ->select([
                 'product_prices.price',
+                'product_prices.delta',
                 'p.url',
                 'p.title'
             ])
-            ->join('products AS p', 'product_prices.product_id', '=', 'p.id')
-            ->where('p.status', '=', self::STATUS_ACTIVE)
+            ->forActive()
             ->get()
             ->toArray();
+    }
+
+    protected function getMassageForCommand(string $command, array $data) :string
+    {
+        $response = '';
+
+        if (empty($data)) {
+            return "no data";
+        }
+
+        switch ($command) {
+            case 'status' :
+            default :
+                return "i'm ok";
+            case 'products' :
+                foreach ($data as $key => $val) {
+                    $title = $val['title'] ?? '';
+                    $price = $val['price'] ?? '';
+                    $url = $val['url'] ?? '';
+
+                    $response .= "{$title}: {$price}\r\n{$url}\r\n\r\n";
+                }
+                break;
+            case 'report' :
+                foreach ($data as $key => $val) {
+                    $title = $val['title'] ?? '';
+                    $price = $val['price'] ?? '';
+                    $url = $val['url'] ?? '';
+                    $delta = (int)$val['delta'] ?? '';
+
+                    if ($delta > 0) {
+                        $prefix = "Цена выросла на {$delta}%";
+                    } elseif ($delta > 0) {
+                        $prefix = "Цена уменьшилась на {$delta}%";
+                    } else {
+                        $prefix = 'Цена не изменилась';
+                    }
+
+                    $response .= "{$title}: {$price} - {$prefix}\r\n{$url}\r\n\r\n";
+                }
+        }
+
+        return $response;
     }
 
     public function getIsCommands(): array
