@@ -8,7 +8,6 @@ import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/sirupsen/logrus"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
@@ -17,9 +16,14 @@ import (
 
 const ChannelUrl = "/channel/"
 
+type ReplyMarkup struct {
+	KeyboardButtonRows [][]string `json:"keyboardButtonRows"`
+}
+
 type SendMessageChannel struct {
-	ChatId int64  `json:"chat_id"`
-	Text   string `json:"text"`
+	ChatId      int64       `json:"chat_id"`
+	Text        string      `json:"text"`
+	ReplyMarkup ReplyMarkup `json:"replyMarkup"`
 }
 
 var ChannelBots = make(map[string]*tgbotapi.BotAPI, 5) // 5!!!!!
@@ -139,7 +143,12 @@ func startListenerChannel(channel Channel) {
 		if err != nil {
 			log.Error("An Error Occurred %v", err)
 
-			err, _ = sendMessageInChannel(channel.UrlCode, update.Message.Chat.ID, "Error #21353")
+			sendMessage := &SendMessageChannel{
+				ChatId: update.Message.Chat.ID,
+				Text:   "Error #21353",
+			}
+
+			err, _ = sendMessageInChannel(channel.UrlCode, sendMessage)
 			if err != nil {
 				log.Error("An Error sendMessageInChannel %v", err)
 				continue
@@ -150,17 +159,18 @@ func startListenerChannel(channel Channel) {
 
 		defer resp.Body.Close()
 
-		var textMessage string
-		body, err := ioutil.ReadAll(resp.Body)
+		d := json.NewDecoder(resp.Body)
+		sendMessage := &SendMessageChannel{}
+		err = d.Decode(sendMessage)
+
 		if err != nil {
-			textMessage = err.Error()
 			log.Error("An Error read from api response %v", err)
 			continue
-		} else {
-			textMessage = string(body)
 		}
 
-		err, _ = sendMessageInChannel(channel.UrlCode, update.Message.Chat.ID, textMessage)
+		sendMessage.ChatId = update.Message.Chat.ID
+
+		err, _ = sendMessageInChannel(channel.UrlCode, sendMessage)
 		if err != nil {
 			log.Error("An Error read from api response send %v", err)
 			continue
@@ -182,7 +192,7 @@ func ChannelHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err, _ = sendMessageInChannel(code, sendMessage.ChatId, sendMessage.Text)
+		err, _ = sendMessageInChannel(code, sendMessage)
 		if err != nil {
 			log.Error("ChannelHandler error send message %v", err)
 			return
@@ -196,10 +206,24 @@ func ChannelHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func sendMessageInChannel(code string, chatId int64, message string) (error, bool) {
+func sendMessageInChannel(code string, sendMessage *SendMessageChannel) (error, bool) {
 	bot := ChannelBots[code]
-	msg := tgbotapi.NewMessage(chatId, message)
+	msg := tgbotapi.NewMessage(sendMessage.ChatId, sendMessage.Text)
 	msg.ParseMode = "MarkdownV2"
+	//msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
+
+	if sendMessage.ReplyMarkup.KeyboardButtonRows != nil {
+		rows := make([][]tgbotapi.KeyboardButton, len(sendMessage.ReplyMarkup.KeyboardButtonRows))
+		for rowIndex, rowButtons := range sendMessage.ReplyMarkup.KeyboardButtonRows {
+			buttons := make([]tgbotapi.KeyboardButton, len(rowButtons))
+			for btnIndex, btnTxt := range rowButtons {
+				buttons[btnIndex] = tgbotapi.NewKeyboardButton(btnTxt)
+			}
+			rows[rowIndex] = tgbotapi.NewKeyboardButtonRow(buttons...)
+		}
+
+		msg.ReplyMarkup = tgbotapi.NewReplyKeyboard(rows...)
+	}
 
 	if _, err := bot.Send(msg); err != nil {
 		log.Error("sendMessageInChannel error send message %v", err)

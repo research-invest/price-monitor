@@ -7,7 +7,6 @@ use App\Markets\Markets;
 use App\Models\MessageLog;
 use App\Models\ProductSubscriber;
 use App\Models\Subscriber;
-use Illuminate\Http\Request;
 
 class TgServiceController extends Controller
 {
@@ -34,13 +33,16 @@ class TgServiceController extends Controller
         $markets = new Markets($data);
 
         if ($commands = $markets->getIsCommands()) {
-            return join(', ', $commands);
-        } elseif ($product = $markets->getProduct()) {
+            return response()->json($commands);
+        } elseif ($product = $markets->getProduct()) { //?
             ProductSubscriber::setProductSubscriber($subscriber->id, $product->id);
+            return response()->json([
+                'text' => 'Принято командир ',
+            ]);
         } elseif ($errors = $markets->getErrors()) {
-            return join(', ', $errors);
+            return response()->json([
+                'text' => implode(', ', $errors),
+            ]);
         }
-
-        return 'Ваша ссылка успешно добавлена в систему.';
     }
 }

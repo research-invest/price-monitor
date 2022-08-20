@@ -22,6 +22,3 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/v1/tg-service', [TgServiceController::class, 'message']);
 
-Route::post('/v1/', function (Request $request, JsonRpcServer $server) {
-    return $server->handle($request);
-});

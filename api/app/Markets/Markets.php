@@ -15,9 +15,10 @@ class Markets
     private array $errors = [];
     private array $commands = [];
     private array $commandsBot = [
-        'status' => 'Status',
-        'products' => 'Products list',
-        'report' => 'Report',
+        'start',
+//        'status' => 'Status',
+//        'products' => 'Products list',
+//        'report' => 'Report',
     ];
 
     public function __construct(array $data = [])
@@ -53,12 +54,12 @@ class Markets
         $command = $this->requestData['command'];
 
         if ($command) {
-            if (!array_key_exists($command, $this->commandsBot)) {
-                $this->addError('Такой команды не существует.');
+            if (!in_array($command, $this->commandsBot, true)) {
+                $this->addError('Такой команды не существует\.');
                 return null;
             }
 
-            $this->commands[] = $this->command($command);
+            $this->commands = $this->command($command);
             return null;
         }
 
@@ -72,18 +73,39 @@ class Markets
         return $this->getClassMarketByUrl($url);
     }
 
-    protected function command(string $command): string
+    protected function command(string $command): array
     {
         switch ($command) {
-            case 'status' :
+            case 'start' :
+                return [
+                    'text' => 'Салам пополам баля жи есь, давай ссылку с ягодОк пидорок',
+                    'replyMarkup' => [
+                        'keyboardButtonRows' => [
+                            [
+                                'кнопка 1 😄',
+                                'кнопка 2 ❤️',
+                                'кнопка 3 ❌',
+                            ],
+                            [
+                                'кнопка 4 😡',
+                                'кнопка 5 💄',
+                                'кнопка 6 🧠',
+                            ],
+                        ],
+                    ],
+                ];
+//            case 'status' :
+//                return "i'm ok";
+//            case 'products' :
+//                $productPrices = Market::getProductPricesByUser();
+//                return Market::getMassageForCommandProducts($command, $productPrices);
+//            case 'report' :
+//                $productPrices = Market::getProductPricesByUser();
+//                return Market::getMassageForCommandReport($command, $productPrices);
             default :
-                return "i'm ok";
-            case 'products' :
-                $productPrices = Market::getProductPricesByUser();
-                return Market::getMassageForCommandProducts($command, $productPrices);
-            case 'report' :
-                $productPrices = Market::getProductPricesByUser();
-                return Market::getMassageForCommandReport($command, $productPrices);
+                return [
+                    'text' => "i'm ok"
+                ];
         }
     }
 
@@ -97,7 +119,7 @@ class Markets
         $parseUrl = parse_url($url);
 
         if (empty($parseUrl['host'])) {
-            $this->addError('Не корректная ссылка');
+            $this->addError('Не корректная ссылка, ну ты че баля, дай нормальную ссылку\!');
             return null;
         }
 
@@ -106,7 +128,7 @@ class Markets
         } else if (substr_count($parseUrl['host'], OzonRu::HOST)) {
             return new OzonRu($url);
         } else {
-            $this->addError('Принимаем ссылки на товары только с wildberries.ru и ozon.ru.');
+            $this->addError('Принимаем ссылки на товары только с wildberries.ru и ozon.ru(пока не принимаем).');
         }
 
         return null;

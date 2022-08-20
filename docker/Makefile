@@ -1,8 +1,10 @@
-init: up migrate seed
+init: up composer_install migrate seed
 up:
 	docker-compose up -d
 recreate-tg:
 	docker-compose up -d --force-recreate --no-deps --build tg-service
+composer_install:
+	docker-compose run --rm api-php composer install
 migrate:
 	docker-compose run --rm api-php php artisan migrate --force
 seed:
