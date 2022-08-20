@@ -8,6 +8,8 @@ use App\Models\Product;
 
 class Markets
 {
+    const STATUS_ACTIVE = 1;
+
     protected array $requestData = [];
     protected $marketClass;
     private array $errors = [];
@@ -18,10 +20,12 @@ class Markets
         'report' => 'Report',
     ];
 
-    public function __construct(array $data)
+    public function __construct(array $data = [])
     {
-        $this->setRequestData($data);
-        $this->getMarketClass();
+        if (!empty($data)) {
+            $this->setRequestData($data);
+            $this->getMarketClass();
+        }
     }
 
     public function setRequestData(array $data)
@@ -75,10 +79,12 @@ class Markets
             default :
                 return "i'm ok";
             case 'products' :
+                $productPrices = Market::getProductPricesByUser();
+                return Market::getMassageForCommandProducts($command, $productPrices);
             case 'report' :
-                return 'in progress';
+                $productPrices = Market::getProductPricesByUser();
+                return Market::getMassageForCommandReport($command, $productPrices);
         }
-
     }
 
     public function getIsCommands(): array

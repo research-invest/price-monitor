@@ -2,6 +2,7 @@
 
 namespace App\Markets\ozon;
 
+use App\Libs\HttpClient\HttpClient;
 use App\Markets\Market;
 use App\Models\Product;
 use JetBrains\PhpStorm\ArrayShape;
@@ -10,6 +11,8 @@ class OzonRu extends Market
 {
     const MARKET_ID = 2;
     const HOST = 'ozon.ru';
+
+    private HttpClient $httpClient;
 
     public function getProduct(): ?Product
     {
@@ -53,11 +56,26 @@ class OzonRu extends Market
         $price = count($price) === 2 ? $price[1] : 0; //check копейки
 
         return [
-            'price' => (float)($price),
+            //'price' => (float)($price),
+            'price' => number_format($price, 2, '.', ''),
             'title' => $title,
             'description' => $description,
         ];
     }
 
+    public function getProductPageData($productUrl): array
+    {
+        $this->httpClient = new HttpClient();
+
+        $content = $this->httpClient->getContents($productUrl);
+
+        $data = $this->getInfoProduct($content);
+
+        return [
+            'price' => $data['price'] ?? 0,
+            'title' => $data['title'] ?? '',
+            'description' => $data['description'] ?? '',
+        ];
+    }
 
 }

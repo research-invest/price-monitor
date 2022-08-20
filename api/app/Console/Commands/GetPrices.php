@@ -3,12 +3,12 @@
 namespace App\Console\Commands;
 
 use App\Helpers\MathHelper;
-use App\Libs\HttpClient\HttpClient;
 use App\Markets\Market;
 use App\Markets\Markets;
 use App\Models\Market as MarketModel;
 use App\Models\Product;
 use App\Models\ProductPrice;
+use Illuminate\Support\Facades\Log;
 use JetBrains\PhpStorm\ArrayShape;
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Helper\Table;
@@ -32,7 +32,6 @@ class GetPrices extends Command
      */
     protected $description = 'Command description';
 
-    private HttpClient $httpClient;
 
     /**
      * Create a new command instance.
@@ -59,31 +58,24 @@ class GetPrices extends Command
             ->orderBy('m.id', 'DESC')
             ->get();
 
-        $this->httpClient = new HttpClient();
 
         /**
          * @var Market $products
          */
         foreach ($products as $product) {
-
             $market = new Markets();
 
             $class = $market->getClassMarketByUrl($product->url);
 
             $prices = new ProductPrice();
 
-            $data = $this->getProductPageData($product->url, $class);
+            $data = $class->getProductPageData($product->url);
 
             $this->info('Product['.$product->id.'] price:'. $data['price']);
 
             if (empty($data['price'])) {
                 $product->status = Product::STATUS_DELETED;
                 $product->save();
-
-//                ChangeLog::create([
-//                    'product_id' => $product->id,
-//                    'log' => $product->id . 'Товар удален',
-//                ]);
 
                 continue;
             }
@@ -108,7 +100,7 @@ class GetPrices extends Command
                 [
                     'product_id' => $product->id,
                     'price' => $data['price'],
-                    'delta' => MathHelper::getPercentageChange($lastPrice ? $lastPrice->price : 0, $data['price']),
+                    'delta' => $lastPrice ? MathHelper::getPercentageChange( $lastPrice->price, $data['price']) : 0
                 ]);
 
             $prices->save();
@@ -124,20 +116,6 @@ class GetPrices extends Command
                 $prices->notify(new \App\Notifications\PriceNotification($notifyData));
             }
         }
-    }
-
-    #[ArrayShape(['price' => "int|mixed", 'title' => "mixed|string", 'description' => "mixed|string"])]
-    protected function getProductPageData($productUrl, &$class): array
-    {
-        $content = $this->httpClient->getContents($productUrl);
-
-        $data = $class->getInfoProduct($content);
-
-        return [
-            'price' => $data['price'] ?? 0,
-            'title' => $data['title'] ?? '',
-            'description' => $data['description'] ?? '',
-        ];
     }
 
 
@@ -162,5 +140,4 @@ class GetPrices extends Command
         $table->render();
 
     }
-
 }

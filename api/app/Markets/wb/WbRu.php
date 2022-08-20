@@ -2,6 +2,7 @@
 
 namespace App\Markets\wb;
 
+use App\Libs\HttpClient\HttpClient;
 use App\Markets\Market;
 use App\Models\Product;
 use JetBrains\PhpStorm\ArrayShape;
@@ -11,6 +12,8 @@ class WbRu extends Market
 
     const MARKET_ID = 1;
     const HOST = 'wildberries.ru';
+
+    private HttpClient $httpClient;
 
     public function getProduct(): ?Product
     {
@@ -29,28 +32,50 @@ class WbRu extends Market
         return $this->firstOrCreateProduct($externalId);
     }
 
-    #[ArrayShape(['price' => "float", 'title' => "mixed|string", 'description' => "mixed|string"])]
     public function getInfoProduct($contentPage): array
     {
-        $begin = strpos($contentPage, '<div itemscope itemtype="http://schema.org/Product">');
-        $contentViewItemscope = substr($contentPage, $begin,
-            strpos($contentPage, '<div class="product-detail"') - $begin,
-        );
+        $result = json_decode($contentPage);
 
-        preg_match('/\<meta itemprop=\"name\" content=\"(.*)\"\>/m', $contentViewItemscope, $title);
-        $title = count($title) === 2 ? $title[1] : '';
+        $salePriceU = $result->data->products[0]->salePriceU ?? '';
+        $priceU = $result->data->products[0]->priceU ?? '';
+        $price = $salePriceU ? $salePriceU : $priceU;
+        $title = $result->data->products[0]->name ?? '';
 
-        preg_match('/\<meta itemprop=\"description\" content=\"(.*)" \/>/m', $contentViewItemscope, $description);
-        $description = count($description) === 2 ? $description[1] : '';
-
-        preg_match('/\<meta itemprop=\"price\" content=\"(.*)\"\>/m', $contentViewItemscope, $price);
-        $price = count($price) === 2 ? $price[1] : 0;
+        $priceFormat = number_format(substr($price,0,-2), 2, '.', '');
 
         return [
-            'price' => (float)($price),
+            'price' => $priceFormat,
             'title' => $title,
-            'description' => $description,
+            //'description' => $description,
         ];
     }
 
+    public function getExternalId(string $url): int
+    {
+        $parseUrl = parse_url($url);
+
+        preg_match('/\/catalog\/([0-9]+)\/detail\.aspx/', $parseUrl['path'], $externalId);
+        $externalId = count($externalId) === 2 ? (int)$externalId[1] : 0;
+
+        return $externalId;
+    }
+
+    public function getProductPageData($productUrl): array
+    {
+        $this->httpClient = new HttpClient();
+
+        $externalId = $this->getExternalId($productUrl);
+
+        $uri = "https://card.wb.ru/cards/detail?spp=0&regions=68,64,83,4,38,80,33,70,82,86,75,30,69,22,66,31,48,1,40,71&stores=117673,122258,122259,125238,125239,125240,6159,507,3158,117501,120602,120762,6158,121709,124731,159402,2737,130744,117986,1733,686,132043&pricemarginCoeff=1.0&reg=0&appType=1&emp=0&locale=ru&lang=ru&curr=rub&couponsGeo=12,3,18,15,21&dest=-1029256,-102269,-1278703,-1255563&nm={$externalId}";
+
+        $content = $this->httpClient->getContents($uri);
+
+        $data = $this->getInfoProduct($content);
+
+        return [
+            'price' => $data['price'] ?? 0,
+            'title' => $data['title'] ?? '',
+            'description' => $data['description'] ?? '',
+        ];
+    }
 }

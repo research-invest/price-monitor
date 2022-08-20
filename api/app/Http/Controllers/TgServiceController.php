@@ -9,7 +9,6 @@ use App\Models\ProductSubscriber;
 use App\Models\Subscriber;
 use Illuminate\Http\Request;
 
-
 class TgServiceController extends Controller
 {
     public function message(MessageRequest $request)
