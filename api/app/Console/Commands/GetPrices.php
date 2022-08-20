@@ -8,6 +8,7 @@ use App\Markets\Markets;
 use App\Models\Market as MarketModel;
 use App\Models\Product;
 use App\Models\ProductPrice;
+use Illuminate\Support\Facades\Log;
 use JetBrains\PhpStorm\ArrayShape;
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Helper\Table;
@@ -69,7 +70,6 @@ class GetPrices extends Command
             $prices = new ProductPrice();
 
             $data = $class->getProductPageData($product->url);
-
 
             $this->info('Product['.$product->id.'] price:'. $data['price']);
 

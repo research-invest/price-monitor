@@ -5,7 +5,6 @@ namespace App\Markets;
 use App\Markets\ozon\OzonRu;
 use App\Markets\wb\WbRu;
 use App\Models\Product;
-use App\Models\ProductPrice;
 
 class Markets
 {
@@ -80,68 +79,12 @@ class Markets
             default :
                 return "i'm ok";
             case 'products' :
+                $productPrices = Market::getProductPricesByUser();
+                return Market::getMassageForCommandProducts($command, $productPrices);
             case 'report' :
-                $response = $this->getProductPricesByUser();
-                return $this->getMassageForCommand($command, $response);
+                $productPrices = Market::getProductPricesByUser();
+                return Market::getMassageForCommandReport($command, $productPrices);
         }
-
-    }
-
-    protected function getProductPricesByUser()
-    {
-        return ProductPrice::query()
-            ->select([
-                'product_prices.price',
-                'product_prices.delta',
-                'p.url',
-                'p.title'
-            ])
-            ->forActive()
-            ->get()
-            ->toArray();
-    }
-
-    protected function getMassageForCommand(string $command, array $data) :string
-    {
-        $response = '';
-
-        if (empty($data)) {
-            return "no data";
-        }
-
-        switch ($command) {
-            case 'status' :
-            default :
-                return "i'm ok";
-            case 'products' :
-                foreach ($data as $key => $val) {
-                    $title = $val['title'] ?? '';
-                    $price = $val['price'] ?? '';
-                    $url = $val['url'] ?? '';
-
-                    $response .= "{$title}: {$price}\r\n{$url}\r\n\r\n";
-                }
-                break;
-            case 'report' :
-                foreach ($data as $key => $val) {
-                    $title = $val['title'] ?? '';
-                    $price = $val['price'] ?? '';
-                    $url = $val['url'] ?? '';
-                    $delta = (int)$val['delta'] ?? '';
-
-                    if ($delta > 0) {
-                        $prefix = "Цена выросла на {$delta}%";
-                    } elseif ($delta > 0) {
-                        $prefix = "Цена уменьшилась на {$delta}%";
-                    } else {
-                        $prefix = 'Цена не изменилась';
-                    }
-
-                    $response .= "{$title}: {$price} - {$prefix}\r\n{$url}\r\n\r\n";
-                }
-        }
-
-        return $response;
     }
 
     public function getIsCommands(): array
